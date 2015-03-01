@@ -66,6 +66,10 @@ namespace TaskReorder
             List<XElement> completedElements = new List<XElement>();
             List<XElement> newCuratedElementList = new List<XElement>();
 
+            bool foundCompletedItem = false;
+            bool foundNotCompletedItem = false;
+            bool pageNeedsRefresh = false;
+
             foreach (XElement oeElement in oeElementsParent.Elements(ns + "OE"))
             {
                 XElement tag = oeElement.Element(ns + "Tag");
@@ -73,12 +77,30 @@ namespace TaskReorder
                 {
                     if (tag.Attribute("completed").Value == "true")
                     {
+                        foundCompletedItem = true;
                         completedElements.Add(oeElement);
                         continue;
+                    }
+                    else
+                    {
+                        foundNotCompletedItem = true;
+                        if (foundCompletedItem == true)
+                        {
+                            // we are encountering an item that is not yet completed
+                            // if we have already seen items that have been completed, 
+                            // then the page needs to be refreshed.
+
+                            pageNeedsRefresh = true;
+                        }
                     }
                 }
 
                 newCuratedElementList.Add(oeElement);
+            }
+
+            if (!pageNeedsRefresh)
+            {
+                return;
             }
 
             foreach (XElement completedElement in completedElements)
